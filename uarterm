@@ -1,0 +1,48 @@
+#!/bin/bash
+
+dir="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+log_root=/workspace/logs/uart
+
+function usage
+{
+    echo "usage: uarterm <port> [baud] [logfile]"
+    echo
+    echo "    UART terminal wrapper which automatically logs"
+    echo "    all traffic to a file. If no filename is provided"
+    echo "    a date/time stamped file is used."
+    echo
+    echo "    log root: $log_root"
+    echo
+    exit $1
+}
+
+function get_log_dir
+{
+    log_dir="$log_root/$(date +%Y-%m-%d)"
+    if [ ! -d "$log_dir" ]; then
+        mkdir "$log_dir"
+    fi
+    echo "$log_dir"
+}
+
+function connect
+{
+    port=$1
+    baud=$2
+    file=$3
+    [ "$baud" = "" ] && baud=115200
+    if [ -z "$file" ]; then
+        now=$(date +%H:%M:%S)
+        log_file="$(get_log_dir)/${port/\/dev\//}-$now.log"
+    else
+        log_file=$file
+    fi
+    $dir/kermit-ser $port $baud $log_file
+}
+
+[ $# -lt 1 ] && usage 1
+
+case $1 in
+    --help,-h) usage 0 ;;
+    *) connect $@ ;;
+esac

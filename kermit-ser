@@ -1,0 +1,29 @@
+#!/usr/bin/kermit +
+
+if not defined \%1 {
+    echo "usage: \%0 <port> [baud] [logfile]"
+    exit
+}
+set line \%1
+
+if defined \%2 {
+    set speed \%2
+} else {
+    set speed 115200
+}
+
+if defined \%3 {
+    set session-log binary
+    log session \%3
+}
+
+set carrier-watch off
+set handshake none
+set flow-control none
+robust
+set file type bin
+set file name lit
+set rec pack 1000
+set send pack 1000
+set window 5
+connect
