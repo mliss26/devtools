@@ -1,0 +1,34 @@
+#!/bin/bash
+
+usage()
+{
+    echo "usage: xta [host] [display]"
+    echo "    Attach to local [remote] host Xpra and TMUX root sessions."
+    exit $?
+}
+
+[ -z "$1" ] && host=$(hostname) || host=$1
+case $host in
+    sal) disp=50 ;;
+    -h|--help) usage 0 ;;
+    *) disp=false
+esac
+[ -n "$2" ] && disp=$2
+
+if [ $disp != false ]; then
+    xpra attach ssh://$host/$disp >/dev/null 2>&1 &
+fi
+
+if [ "$host" = "$(hostname)" ]; then
+    tmux attach -dt root
+elif [[ "$host" == *:* ]]; then
+    h=$(echo $host | cut -d: -f1)
+    p=$(echo $host | cut -d: -f2)
+    ssh -p $p $h -t tmux attach -dt root
+else
+    mosh -- $host tmux attach -dt root
+fi
+
+if [ $disp != false ]; then
+    xpra detach ssh://$host/$disp >/dev/null 2>&1 &
+fi

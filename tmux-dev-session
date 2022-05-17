@@ -1,0 +1,38 @@
+#!/bin/bash
+
+usage()
+{
+    echo "usage: tmux-dev-session <name> [working directory]"
+    echo
+    echo "    Starts a TMUX development session with git, edit and"
+    echo "    build windows. If the working directory is not specified"
+    echo "    the current directory is used."
+    exit $1
+}
+
+tmux_session_exists()
+{
+    tmux ls -F '#S' | grep -q "\<$1\>"
+}
+
+tmux_dev_session_start()
+{
+    name="$1"
+    cwd="$2"
+    tmux new -s "$name" -n 'git | build' -d -c "$cwd"
+    tmux split-window -t "$name:git | build".0 -h -c "$cwd"
+    tmux new-window -a -t "$name:git | build" -n edit -c "$cwd"
+    tmux next-window -t "$name"
+    tmux send-keys -t "$name:git | build.0" 'git status' Enter
+}
+
+[ $# -ge 1 ] || usage 1
+[ $# -eq 2 ] && cwd=$2 || cwd=$(pwd)
+
+if tmux_session_exists "$1"; then
+    echo "ERROR: dev session '$1' already exists"
+    exit 2
+fi
+
+tmux_dev_session_start "$1" "$cwd"
+tmux attach -t "$1"
