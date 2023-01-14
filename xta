@@ -16,7 +16,11 @@ esac
 [ -n "$2" ] && disp=$2
 
 if [ $disp != false ]; then
-    xpra attach ssh://$host/$disp >/dev/null 2>&1 &
+    if [ "$host" = "$(hostname)" ]; then
+        xpra attach $disp >/dev/null 2>&1 &
+    else
+        xpra attach ssh://$host/$disp >/dev/null 2>&1 &
+    fi
 fi
 
 if [ "$host" = "$(hostname)" ]; then
